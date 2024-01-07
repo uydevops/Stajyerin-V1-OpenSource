@@ -19,6 +19,7 @@ Route::post('administrator', [LoginController::class, 'login'])->name('admin.log
 
 //api
 Route::get('api/countries', [ApiController::class, 'countries'])->name('api.countries');
+Route::get('api/cities/{id}', [ApiController::class, 'cities'])->name('api.cities');
 
 
 Route::prefix('admin')->middleware('auth')->group(function () {
