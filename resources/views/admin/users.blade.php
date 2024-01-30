@@ -61,11 +61,11 @@
                                         <form action="" method="" enctype="multipart/form-data">
                                             <div class="form-group">
                                                 <label for="recipient-name" class="col-form-label">İsim:</label>
-                                                <input type="text" class="form-control" id="name" value="{{ $user->name }}">  
+                                                <input type="text" class="form-control" id="name" value="{{ $user->name }}">
                                             </div>
 
                                             <!--- email -->
-                                            
+
                                             <div class="form-group">
                                                 <label for="recipient-name" class="col-form-label">Email:</label>
                                                 <input type="text" class="form-control" id="email" value="{{ $user->email }}">
@@ -79,7 +79,7 @@
                                             </div>
 
                                             <!--parola tekrar-->
-                                            
+
                                             <div class="form-group">
                                                 <label for="recipient-name" class="col-form-label">Parola Tekrar:</label>
                                                 <input type="text" class="form-control" id="re-password" value="{{ $user->password }}">
@@ -91,23 +91,23 @@
                                                 <label for="recipient-name" class="col-form-label">Ülke:</label>
                                                 <select class="form-control" id="country"></select>
                                             </div>
-                                            
-                                           
+
+
                                             <!--- city -->
 
                                             <div class="form-group">
                                                 <label for="recipient-name" class="col-form-label">Şehir:</label>
-                                                <input type="text" class="form-control" id="city" value="{{ $user->city }}">
+                                                <select class="form-control" id="city"></select>
                                             </div>
 
 
-                                            
 
-                                            
+
+
 
 
                                         </form>
-                                       
+
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -131,26 +131,65 @@
         <!---modal start-->
 
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-                                            
+
         <script>
             $(document).ready(function() {
+                // Sayfa yüklendiğinde ülkeleri getir
+                fetchCountries();
+
+                // Ülke değiştiğinde işlemleri yönet
+                $("#country").change(function() {
+                    fetchCities($(this).val());
+                });
+            });
+
+            // Ülkeleri getiren fonksiyon
+            function fetchCountries() {
                 $.ajax({
                     url: "{{ route('api.countries') }}",
                     type: "GET",
                     dataType: "json",
                     success: function(data) {
-                        var countryOptions = "";
-                        for (var i = 0; i < data.data.length; i++) {
-                            countryOptions += "<option value='" + data.data[i].name + "'>" + data.data[i].name + "</option>";
-                        }
-                        $("#country").html(countryOptions);
+                        // Ülkeleri seçenekleri ile doldur
+                        populateOptions("#country", data.data);
                     },
                     error: function(error) {
-                        console.log('Hata:', error);
+                        console.error('Ülkeleri getirirken hata oluştu:', error);
                     }
                 });
-            });
+            }
+
+            // Seçilen ülkenin şehirlerini getiren fonksiyon
+            function fetchCities(countryId) {
+                // CSRF koruması
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                    }
+                });
+
+                $.ajax({
+                    url: "{{ url('api/cities') }}/" + countryId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        // Şehirleri seçenekleri ile doldur
+                        populateOptions("#city", data.data);
+                    },
+                    error: function(error) {
+                        console.error('Şehirleri getirirken hata oluştu:', error);
+                    }
+                });
+            }
+
+            // Belirtilen seçim alanını verilen veriyle dolduran fonksiyon
+            function populateOptions(elementId, dataArray) {
+                var options = dataArray.map(function(item) {
+                    return "<option value='" + item.id + "'>" + item.name + "</option>";
+                });
+                $(elementId).html(options.join(''));
+            }
         </script>
-      
+
 
         @include('admin.partials.footer')
